@@ -1,0 +1,115 @@
+EX 4 CLIENT
+import java.io.*;
+import java.net.*;
+
+public class dnsclient {
+
+    public static void main(String args[]) throws IOException {
+
+        // Read input from keyboard
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(System.in));
+
+        try ( // Create Datagram Socket
+                DatagramSocket clientsocket = new DatagramSocket()) {
+            InetAddress ipaddress;
+            // If no argument given → use localhost
+            if (args.length == 0) {
+                ipaddress = InetAddress.getLocalHost();
+            } else {
+                ipaddress = InetAddress.getByName(args[0]);
+            }
+            byte[] senddata;
+            byte[] receivedata = new byte[1024];
+            int portaddr = 8080;
+            // Get hostname from user
+            System.out.print("Enter the hostname: ");
+            String sentence = br.readLine();
+            // Convert hostname into bytes
+            senddata = sentence.getBytes();
+            // Create packet to send to server
+            DatagramPacket pack = new DatagramPacket(
+                    senddata,
+                    senddata.length,
+                    ipaddress,
+                    portaddr);
+            clientsocket.send(pack);
+            // Receive response from server
+            DatagramPacket recvpack = new DatagramPacket(
+                    receivedata,
+                    receivedata.length);
+            clientsocket.receive(recvpack);
+            // Convert received bytes to string
+            String modified = new String(
+                    recvpack.getData(),
+                    0,
+                    recvpack.getLength()).trim();
+            System.out.println("IP Address: " + modified);
+            // Close socket
+        }
+    }
+}
+SERVER 
+import java.io.*;
+import java.net.*;
+
+public class dnsserver {
+
+    private static int indexOf(String[] array, String str) {
+        str = str.trim();
+        for (int i = 0; i < array.length; ) {
+            if (array[i].equals(str)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static void main(String arg[]) throws IOException {
+
+        String[] hosts = {"yahoo.com", "gmail.com", "cricinfo.com", "facebook.com"};
+        String[] ip = {"68.180.206.184", "209.85.148.19", "80.168.92.140", "69.63.189.16"};
+
+        System.out.println("DNS Server Started... Press Ctrl+C to Quit");
+
+        DatagramSocket serversocket = new DatagramSocket(8080);
+
+        while (true) {
+
+            byte[] senddata;  // removed unused initialization
+            byte[] receivedata = new byte[1024];
+
+            DatagramPacket recvpack =
+                    new DatagramPacket(receivedata, receivedata.length);
+
+            serversocket.receive(recvpack);
+
+            String sen = new String(
+                    recvpack.getData(),
+                    0,
+                    recvpack.getLength()).trim();
+
+            InetAddress ipaddress = recvpack.getAddress();
+            int port = recvpack.getPort();
+
+            System.out.println("Request for host: " + sen);
+
+            String capsent;
+            int index = indexOf(hosts, sen);
+
+            if (index != -1) {
+                capsent = ip[index];
+            } else {
+                capsent = "Host Not Found";
+            }
+
+            senddata = capsent.getBytes();
+
+            DatagramPacket pack =
+                    new DatagramPacket(senddata, senddata.length, ipaddress, port);
+
+            serversocket.send(pack);
+        }
+    }
+}
+

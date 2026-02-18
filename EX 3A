@@ -1,0 +1,51 @@
+#EX 3 A SERVER PROGRAM
+import java.net.*;
+import java.io.*;
+
+public class Server {
+    public static final int PORT = 4000;
+
+    public static void main(String args[]) {
+        try (ServerSocket sersock = new ServerSocket(PORT)) {
+            System.out.println("Server Started");
+
+            try (Socket sock = sersock.accept()) {
+                System.out.println("Client Connected");
+
+                BufferedReader ins = new BufferedReader(
+                        new InputStreamReader(sock.getInputStream()));
+                System.out.println("Client says: " + ins.readLine());
+
+                PrintWriter ios = new PrintWriter(
+                        sock.getOutputStream(), true);
+                ios.println("Hello from server");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
+# CLIENT PROGRAM  
+import java.io.*;
+import java.net.*;
+public class Client {
+    public static void main(String args[]) {
+        try {
+            System.out.println("Trying to connect...");
+            Socket sock = new Socket(InetAddress.getLocalHost(), 4000);
+
+            PrintWriter ps = new PrintWriter(sock.getOutputStream(), true);
+            ps.println("Hi from client");
+
+            BufferedReader is = new BufferedReader(
+                    new InputStreamReader(sock.getInputStream()));
+            System.out.println("Server says: " + is.readLine());
+
+            sock.close();
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
